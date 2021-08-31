@@ -1,6 +1,14 @@
 package com.example.testapplication
 
+import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
@@ -10,16 +18,24 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
+import android.webkit.DownloadListener
+import android.webkit.URLUtil
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.lifecycle.Observer
 import com.example.testapplication.databinding.ActivityMainBinding
 import com.example.testapplication.dbmodels.Users
+import android.webkit.WebView
+
+import android.webkit.WebViewClient
+
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     val viewModel: MainActivityViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

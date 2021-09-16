@@ -8,6 +8,10 @@ import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import com.example.testapplication.databinding.FragmentFirstBinding
 
+import android.app.AlertDialog
+import androidx.appcompat.view.ContextThemeWrapper
+
+
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
@@ -22,7 +26,7 @@ class FirstFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
 
         _binding = FragmentFirstBinding.inflate(inflater, container, false)
         return binding.root

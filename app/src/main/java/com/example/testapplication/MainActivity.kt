@@ -1,36 +1,24 @@
 package com.example.testapplication
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.Build
+
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import com.example.testapplication.SecureDataFactory.decrypt
-import com.example.testapplication.SecureDataFactory.encrypt
 import com.example.testapplication.databinding.ActivityMainBinding
 import com.example.testapplication.dbmodels.Users
+import com.example.testapplication.firebase.fTag
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.IOException
-import java.io.InputStream
-import java.net.HttpURLConnection
-import java.net.URL
+import com.google.firebase.messaging.FirebaseMessaging
+import timber.log.Timber
 
 
 class MainActivity : AppCompatActivity() {
@@ -54,14 +42,13 @@ class MainActivity : AppCompatActivity() {
                 .setAction("Action", null).show()
             addUser()
         }
-
-        showNotifications()
+        getFireBaseToken()
     }
 
     private fun addUser() {
         val user = Users(userName = "Test User")
         viewModel.addUser(applicationContext, user).observe(this, Observer { userId ->
-            Log.d("MainActivity", "Inserted User Id is $userId")
+            Timber.d("Inserted User Id is $userId")
         })
     }
 
@@ -87,72 +74,15 @@ class MainActivity : AppCompatActivity() {
                 || super.onSupportNavigateUp()
     }
 
-    private fun showNotifications() {
-        var image: Bitmap? = null
-//        val color: Int = Color.parseColor("#f3f3f3")
-        val color: Int = ContextCompat.getColor(this, R.color.red)
-        val r = color shr 16 and 0xFF
-        val g = color shr 8 and 0xFF
-        val b = color shr 0 and 0xFF
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                image =
-                    getBitmapFromURL("https://image.freepik.com/free-photo/closeup-person-filling-out-questionary-form_1262-2259.jpg")
-            } catch (e: IOException) {
-                println(e)
-            }
-            val channelId = "10999"
-            val messageTitle = "This is the title of notification"
-            val messageContent = "This is the content of notification message,"
-            withContext(Dispatchers.Main) {
-                val notification = NotificationCompat.Builder(applicationContext, channelId)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(messageTitle)
-                    .setContentText(messageContent)
-                    .setNumber(10)
-                    .setVibrate(longArrayOf(100, 5000, 100, 5000, 100))
-                    .setLargeIcon(image)
-                    .setLights(0xff0000, 10000000, 100)
-                    .setStyle(
-                        NotificationCompat.BigPictureStyle()
-                            .bigPicture(image).setSummaryText(messageContent)
-                    )
-                    .build()
-
-
-                val notificationManager: NotificationManager =
-                    getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val importance = NotificationManager.IMPORTANCE_HIGH
-                    val mChannel = NotificationChannel(
-                        channelId,
-                        "My Application",
-                        importance
-                    )
-                    mChannel.vibrationPattern = longArrayOf(1000, 1000, 1000, 1000, 1000)
-                    mChannel.enableVibration(true)
-                    mChannel.lightColor = color
-                    mChannel.enableLights(true)
-                    mChannel.setShowBadge(true)
-                    notificationManager.createNotificationChannel(mChannel)
+    private fun getFireBaseToken() {
+        FirebaseMessaging.getInstance().token
+            .addOnCompleteListener(OnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Timber.tag(fTag).w(task.exception, "Fetching FCM registration token failed")
+                    return@OnCompleteListener
                 }
-                notificationManager.notify(1, notification)
-            }
-        }
-    }
-
-    private fun getBitmapFromURL(src: String?): Bitmap? {
-        return try {
-            val url = URL(src)
-            val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-            connection.doInput = true
-            connection.connect()
-            val input: InputStream = connection.inputStream
-            BitmapFactory.decodeStream(input)
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
-        }
+                val token: String? = task.result
+                Timber.tag(fTag).d("New Token is: $token")
+            })
     }
 }

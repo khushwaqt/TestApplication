@@ -54,4 +54,7 @@ dependencies {
 
     def live_data = "2.3.1"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$live_data"
+
+    def timber = "4.7.1"
+    implementation "com.jakewharton.timber:timber:$timber"
 }
